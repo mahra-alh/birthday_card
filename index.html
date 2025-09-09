@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
+  <title>🎉 Happy Birthday</title>
+  <style>
+    :root{
+      --accent:#ff57b3;
+      --bg1:#111827;
+      --bg2:#1f2937;
+      --text:#ffffff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      background: radial-gradient(1200px 800px at 80% -10%, #2f3b59, transparent 60%), linear-gradient(160deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      -webkit-font-smoothing: antialiased;
+      overflow:hidden;
+    }
+    .wrap{
+      position:relative;
+      height:100%;
+      padding:24px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card{
+      width:min(720px, 92vw);
+      border-radius:24px;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.1);
+      border:1px solid rgba(255,255,255,0.2);
+      padding: clamp(18px, 3.5vw, 36px);
+      text-align:center;
+      position:relative;
+      z-index:2;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      background-color: rgba(30, 41, 59, 0.8);
+    }
+    .headline-svg{
+      display:block;
+      max-width:620px;
+      width:100%;
+      height:130px;
+      transform: translateY(48px);
+      margin: 0 auto -48px !important;
+      overflow:visible;
+    }
+    .birthday-image{
+      display:block;
+      margin:0 auto;
+      width:100%;
+      max-width:min(400px, 80vw);
+      height:auto;
+      cursor:pointer;
+      transition: transform .2s ease;
+    }
+    .birthday-image:active { transform: scale(0.98); }
+
+    /* Pop-in animation for cake */
+    .pop-in {
+      animation: pop .45s ease-out both;
+    }
+    @keyframes pop {
+      0%   { transform: scale(.6); opacity: 0; }
+      60%  { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    .footer{
+      opacity:.8;
+      font-size:12px;
+      margin-top:10px
+    }
+
+    .balloon{
+      position:absolute;
+      width:75px;
+      height:85px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent 50%), var(--accent);
+      left:var(--x);
+      bottom:-70px;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,.4));
+      animation: float var(--dur) linear var(--delay) infinite;
+      transform-origin: center bottom;
+    }
+    .balloon::after{
+      content:'';
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:100%;
+      width:1px;
+      height:25vh;
+      background:rgba(255,255,255,.4);
+      box-shadow: 1px 0 0 rgba(0,0,0,.1);
+    }
+    @keyframes float{
+      0%{transform:translateY(0)}
+      100%{transform:translateY(-120vh)}
+    }
+    canvas#confetti{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:3
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <!-- Balloons -->
+  <div class="balloon" style="--x:8vw; --dur:13s; --delay:-1s; background:#ff57b3;"></div>
+  <div class="balloon" style="--x:22vw; --dur:15s; --delay:-4s; background:#7afcff;"></div>
+  <div class="balloon" style="--x:36vw; --dur:12s; --delay:-2.5s;background:#ffd166;"></div>
+  <div class="balloon" style="--x:58vw; --dur:16s; --delay:-6s; background:#b6ffb3;"></div>
+  <div class="balloon" style="--x:74vw; --dur:14s; --delay:-3.3s;background:#ff9aa2;"></div>
+  <div class="balloon" style="--x:88vw; --dur:17s; --delay:-5.2s;background:#c9b6ff;"></div>
+
+  <div class="wrap">
+    <div class="card">
+      <!-- Headline -->
+      <svg id="headline" class="headline-svg"
+           viewBox="0 0 600 160"
+           xmlns="http://www.w3.org/2000/svg"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           role="img" aria-label="Click to Open">
+        <defs>
+          <path id="headline-arc" d="M40 120 A 300 300 0 0 1 560 120" />
+        </defs>
+        <text font-family="Fredoka, sans-serif"
+              font-weight="700"
+              font-size="70px"
+              fill="#ffffff"
+              text-anchor="middle"
+              transform="translate(0,40)">
+          <textPath xlink:href="#headline-arc" startOffset="50%">
+            Click to Open
+          </textPath>
+        </text>
+      </svg>
+
+      <!-- Gift Box -->
+      <img id="giftImage"
+           src="box_python.png"
+           alt="Gift Box"
+           class="birthday-image"
+           role="button"
+           tabindex="0"
+           aria-label="Open the gift" />
+
+      <!-- Footer -->
+      <div class="footer">Made with ❤️ by <span id="from">Mahra</span></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('from').textContent = 'Mahra';
+
+    // Confetti engine (time-based + mobile speed boost)
+    (function(){
+      const BASE_SPEED = 1.5; // desktop baseline
+      const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const SPEED = BASE_SPEED * (IS_MOBILE ? 1.6 : 1);
+
+      const TWO_PI = Math.PI * 2;
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      let w, h, particles = [], running = false, onDoneCb = null;
+
+      function resize(){
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const rand=(min,max)=>Math.random()*(max-min)+min;
+
+      function spawn(n = IS_MOBILE ? 160 : 220){
+        particles.length = 0;
+        for(let i=0;i<n;i++){
+          particles.push({
+            x:rand(0,w),
+            y:-10,
+            r:rand(4,8),
+            vx:rand(-0.5,0.5)*SPEED,
+            vy:rand(1.0,2.2)*SPEED,
+            rot:rand(0,TWO_PI),
+            rotSpd:rand(-0.05,0.05)*SPEED,
+            col:`hsl(${Math.floor(rand(0,360))} 90% 60%)`,
+            shape: Math.random()<0.5?'rect':'circ'
+          });
+        }
+      }
+
+      let lastTime = 0;
+      function step(now){
+        if(!running) return;
+
+        if(!lastTime) lastTime = now;
+        let dt = (now - lastTime) / (1000/60); // in "frames at 60fps"
+        dt = Math.min(dt, 3); // clamp
+        lastTime = now;
+
+        ctx.clearRect(0,0,w,h);
+        let alive = false;
+        const gravity = 0.01 * SPEED;
+
+        for(const p of particles){
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.rot += p.rotSpd * dt;
+          p.vy += gravity * dt;
+
+          if(p.y < h + 30) alive = true;
+
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle=p.col;
+          if(p.shape==='rect'){
+            ctx.fillRect(-p.r,-p.r,p.r*2,p.r*2*0.6);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0,0,p.r,0,TWO_PI);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        if(alive){
+          requestAnimationFrame(step);
+        } else {
+          running = false;
+          const cb = onDoneCb;
+          onDoneCb = null;
+          if(typeof cb === 'function') cb();
+        }
+      }
+
+      window.Confetti = {
+        burst({count, onDone} = {}){
+          if(running) return;
+          running = true;
+          onDoneCb = onDone || null;
+          spawn(count ?? undefined);
+          lastTime = 0;
+          requestAnimationFrame(step);
+        }
+      };
+    })();
+
+    // Click logic
+    (function(){
+      const img = document.getElementById('giftImage');
+      const headline = document.getElementById('headline');
+      let opened = false;
+
+      function openGiftOnce(){
+        if(opened) return;
+        opened = true;
+
+        if (window.Confetti && typeof window.Confetti.burst === 'function') {
+          window.Confetti.burst({
+            count: 220,
+            onDone: () => {
+              const cakeEmoji = document.createElement("div");
+              cakeEmoji.textContent = "🎂";
+              cakeEmoji.style.fontSize = "8rem";
+              cakeEmoji.classList.add("pop-in");
+              cakeEmoji.setAttribute("aria-label","Birthday Cake");
+
+              img.replaceWith(cakeEmoji);
+              if (headline) headline.remove();
+            }
+          });
+        }
+      }
+
+      img.addEventListener('click', openGiftOnce);
+      img.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          openGiftOnce();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
