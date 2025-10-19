@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&family=Outfit:wght@800&display=swap" rel="stylesheet">
   <title>🎉 Happy Birthday</title>
   <style>
     :root{ --bg1:#111827; --bg2:#1f2937; --text:#ffffff; }
@@ -14,10 +14,45 @@
       background: radial-gradient(1200px 800px at 80% -10%, #2f3b59, transparent 60%),
                   linear-gradient(160deg,var(--bg1),var(--bg2));
       color:var(--text);
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      font-family: Inter, system-ui,-apple-system,Segoe UI,Roboto,Arial;
       -webkit-font-smoothing: antialiased;
       overflow:hidden;
     }
+
+    .cake-wrap{
+      position:relative;
+      aspect-ratio:1/1;
+      width:100%;
+      max-width:min(400px,80vw);
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+
+    .cake-title{
+      font-family: 'Outfit', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-weight: 800;
+      font-size: clamp(32px, 6vw, 48px);
+      color: #fff;
+      margin: 0 0 10px 0;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px rgba(0,0,0,.45);
+    }
+
+    /* Instruction under the cake */
+    .card-instruction{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-weight: 500;
+      font-size: clamp(14px, 3.6vw, 18px);
+      background: linear-gradient(135deg, #a8daff 0%, #ffd89b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: .95;
+      margin: 14px 0 0 0;
+    }
+
     .wrap{ position:relative; height:100%; padding:24px; display:flex; align-items:center; justify-content:center; }
     .card{
       width:min(720px,92vw); border-radius:24px;
@@ -50,8 +85,12 @@
     .pop-in{ animation: pop .45s ease-out both; }
     @keyframes pop{ 0%{ transform: scale(.6); opacity:0; } 60%{ transform: scale(1.08); opacity:1; } 100%{ transform: scale(1); } }
 
+    @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+    }
+
     /* SVG container keeps 1:1 like your original */
-    .cake-wrap{ position:relative; aspect-ratio:1/1; width:100%; max-width:min(400px,80vw); margin:0 auto; }
     .cake-wrap svg{ width:100%; height:100%; display:block; }
 
     /* Flames inside the SVG */
@@ -79,7 +118,8 @@
       background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.9), rgba(200,200,200,0) 70%);
       opacity:.9; filter: blur(0.5px); pointer-events:none; animation: puff 700ms ease-out forwards; z-index: 2;
     }
-    @keyframes puff{ 0%{ transform:translate(-50%,-110%) scale(.8); opacity:.9; } 100%{ transform:translate(-50%,-180%) scale(1.8); opacity:0; } }
+    @keyframes puff{ 0%{ transform:translate(-50%,90%) scale(.8); opacity:.9; } 100%{ transform:translate(-50%,-10%) scale(1.8); opacity:0; } }
+    
   </style>
 </head>
 <body>
@@ -147,24 +187,50 @@
       function resize(){ w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
       window.addEventListener('resize', resize); resize();
       const rand=(min,max)=>Math.random()*(max-min)+min;
-      function spawn(n = IS_MOBILE ? 160 : 220){
+      
+      function spawnFalling(n = IS_MOBILE ? 160 : 220){
         particles.length = 0;
         for(let i=0;i<n;i++){
-          particles.push({ x:rand(0,w), y:-10, r:rand(4,8),
+          particles.push({ 
+            x:rand(0,w), y:-10, r:rand(4,8),
             vx:rand(-0.5,0.5)*SPEED, vy:rand(1.0,2.2)*SPEED,
             rot:rand(0,TWO_PI), rotSpd:rand(-0.05,0.05)*SPEED,
             col:`hsl(${Math.floor(rand(0,360))} 90% 60%)`,
-            shape: Math.random()<0.5?'rect':'circ' });
+            shape: Math.random()<0.5?'rect':'circ',
+            gravity: 0.01*SPEED
+          });
         }
       }
+
+      function spawnBurst(x, y, n = IS_MOBILE ? 200 : 280){
+        particles.length = 0;
+        for(let i=0;i<n;i++){
+          const angle = rand(0, TWO_PI);
+          const velocity = rand(3, 8) * SPEED;
+          particles.push({ 
+            x: x, 
+            y: y, 
+            r:rand(4,8),
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity - rand(1, 3) * SPEED,
+            rot:rand(0,TWO_PI), 
+            rotSpd:rand(-0.08,0.08)*SPEED,
+            col:`hsl(${Math.floor(rand(0,360))} 90% 60%)`,
+            shape: Math.random()<0.5?'rect':'circ',
+            gravity: 0.015*SPEED
+          });
+        }
+      }
+
       let lastTime = 0;
       function step(now){
         if(!running) return;
         if(!lastTime) lastTime = now;
         let dt = (now - lastTime) / (1000/60); dt = Math.min(dt, 3); lastTime = now;
-        ctx.clearRect(0,0,w,h); let alive=false; const gravity=0.01*SPEED;
+        ctx.clearRect(0,0,w,h); let alive=false;
+        
         for(const p of particles){
-          p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.rotSpd*dt; p.vy += gravity*dt;
+          p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.rotSpd*dt; p.vy += p.gravity*dt;
           if(p.y < h + 30) alive = true;
           ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.col;
           if(p.shape==='rect'){ ctx.fillRect(-p.r,-p.r,p.r*2,p.r*2*0.6); }
@@ -174,8 +240,24 @@
         if(alive){ requestAnimationFrame(step); }
         else { running=false; const cb=onDoneCb; onDoneCb=null; if(typeof cb==='function') cb(); }
       }
+      
       window.Confetti = {
-        burst({count,onDone} = {}){ if(running) return; running=true; onDoneCb=onDone||null; spawn(count??undefined); lastTime=0; requestAnimationFrame(step); }
+        burst({count,onDone} = {}){ 
+          if(running) return; 
+          running=true; 
+          onDoneCb=onDone||null; 
+          spawnFalling(count??undefined); 
+          lastTime=0; 
+          requestAnimationFrame(step); 
+        },
+        burstFrom({x, y, count, onDone} = {}){
+          if(running) return; 
+          running=true; 
+          onDoneCb=onDone||null; 
+          spawnBurst(x, y, count??undefined); 
+          lastTime=0; 
+          requestAnimationFrame(step);
+        }
       };
     })();
 
@@ -196,6 +278,11 @@
               cakeContainer.className = "pop-in cake-wrap";
               cakeContainer.setAttribute("aria-label","Birthday Cake");
 
+              const cakeTitle = document.createElement("h2");
+              cakeTitle.className = "cake-title";
+              cakeTitle.textContent = "Happy Birthday";
+              cakeContainer.appendChild(cakeTitle);
+
               // Load your SVG and inline it
               const svgText = await fetch("Cake 2 Candles.svg").then(r => r.text());
               const holder = document.createElement("div");
@@ -204,6 +291,12 @@
               // Ensure proper viewBox exists (your file uses 1080×1080)
               cakeSvg.setAttribute("viewBox", "0 0 1080 1080");
               cakeContainer.appendChild(cakeSvg);
+
+              // Instruction UNDER the cake
+              const instruction = document.createElement("p");
+              instruction.className = "card-instruction";
+              instruction.textContent = "Blow into the mic to blow out your candles";
+              cakeContainer.appendChild(instruction);
 
               // Flame builder (inside the SVG)
               function makeSvgFlame(className){
@@ -258,14 +351,15 @@
               // === Blow-out logic ===
               let blown = false;
               function extinguish(){
-                if (blown) return; blown = true;
+                if (blown) return; 
+                blown = true;
 
                 // CSS fade-out on SVG flames
                 f1.classList.add("extinguish");
                 f2.classList.add("extinguish");
                 setTimeout(()=>{ f1.remove(); f2.remove(); }, 420);
 
-                // Add two puffs over each wick (HTML overlay in %)
+                // Add smoke puffs
                 function puffAt(pt){
                   const px = (pt.x / 1080) * 100;
                   const py = (pt.y / 1080) * 100;
@@ -278,10 +372,94 @@
                     setTimeout(()=>puff.remove(), 800);
                   }
                 }
-                puffAt(left); puffAt(right);
+                puffAt(left); 
+                puffAt(right);
 
                 stopMic();
-              }
+
+                // === Confetti burst ===
+                try {
+                  const rect = cakeSvg.getBoundingClientRect();
+                  const cx = rect.left + ((left.x + right.x) / 2 / 1080) * rect.width;
+                  const cy = rect.top + ((left.y - 20) / 1080) * rect.height;
+
+                  // Trigger the confetti burst
+                  window.Confetti.burstFrom({ x: cx, y: cy, count: 280 });
+
+                  // Wait just enough for the burst to finish (~1.3s) before showing the emoji
+                  setTimeout(() => {
+                    const cakeRect = cakeSvg.getBoundingClientRect();
+                    const contRect = cakeContainer.getBoundingClientRect();
+                    const centerX = contRect.left + (cakeRect.left - contRect.left) + cakeRect.width / 2 - 45; 
+                    const centerY = contRect.top  + (cakeRect.top  - contRect.top)  + cakeRect.height * -0.30;
+
+                    // 📩 Envelope emoji
+                    const letterEmoji = document.createElement("div");
+                    letterEmoji.textContent = "📩";
+                    Object.assign(letterEmoji.style, {
+                      position: "absolute",
+                      left: centerX + "px",
+                      top: centerY + "px",
+                      transform: "translate(-50%, -50%)",
+                      fontSize: "clamp(72px, 14vw, 120px)",
+                      cursor: "pointer",
+                      filter: "drop-shadow(0 6px 14px rgba(0,0,0,0.35))",
+                      transition: "transform .25s ease",
+                      zIndex: 4,
+                      userSelect: "none"
+                    });
+
+                    // Update the instruction text right as the emoji appears
+                    const instructionEl = cakeContainer.querySelector(".card-instruction");
+                    if (instructionEl) {
+                      instructionEl.textContent = "Click me !";
+                      instructionEl.style.fontSize = "clamp(28px, 5vw, 42px)";
+                      instructionEl.style.fontWeight = "900";
+                      instructionEl.style.color = "#ffffff";
+                      instructionEl.style.textTransform = "uppercase";
+                      instructionEl.style.letterSpacing = "1px";
+                    }
+
+
+                    cakeContainer.appendChild(letterEmoji);
+
+                    // === Popup logic ===
+                    function showPopup() {
+                      const wrap = document.createElement("div");
+                      wrap.innerHTML = `
+                        <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+                                    background:rgba(0,0,0,.4); backdrop-filter:blur(3px); z-index:6;">
+                          <div role="dialog" aria-modal="true" aria-label="Birthday message"
+                              style="background:#fff; color:#0f172a; border-radius:18px; padding:22px 26px;
+                                      box-shadow:0 24px 60px rgba(0,0,0,0.55); text-align:center;
+                                      max-width:min(420px,90vw);">
+                            <h3 style="font:800 20px/1.25 'Outfit',system-ui;margin:0 0 8px;">Happy Birthday!!</h3>
+                            <p style="font:500 16px/1.65 Inter,system-ui;margin:0;">
+                              Sorry I’m too broke for a real birthday present, but I love you though 💖
+                            </p>
+                            <button style="margin-top:16px; background:#0f172a; color:#fff; border:none;
+                                          border-radius:10px; padding:8px 14px; cursor:pointer;">Close</button>
+                          </div>
+                        </div>`;
+                      document.body.appendChild(wrap);
+                      const overlay = wrap.firstElementChild;
+                      const closeBtn = overlay.querySelector("button");
+                      const close = () => overlay.remove();
+                      closeBtn.addEventListener("click", close);
+                      overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+                    }
+
+                    letterEmoji.addEventListener("click", showPopup);
+                    letterEmoji.addEventListener("keydown", e => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showPopup(); }
+                    });
+                    letterEmoji.addEventListener("mouseenter", () => letterEmoji.style.transform = "translate(-50%,-50%) scale(1.08)");
+                    letterEmoji.addEventListener("mouseleave", () => letterEmoji.style.transform = "translate(-50%,-50%) scale(1)");
+                  }, 1300); // ⏰ delay until burst finishes
+                } catch(e) {
+                  console.warn("Confetti burst error:", e);
+                }
+              }//function ends here for blowing the candles out
 
               // Click / Space / B fallback
               cakeContainer.addEventListener("click", extinguish);
