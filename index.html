@@ -18,10 +18,7 @@
       -webkit-font-smoothing: antialiased;
       overflow:hidden;
     }
-    .wrap{
-      position:relative; height:100%; padding:24px;
-      display:flex; align-items:center; justify-content:center;
-    }
+    .wrap{ position:relative; height:100%; padding:24px; display:flex; align-items:center; justify-content:center; }
     .card{
       width:min(720px,92vw); border-radius:24px;
       backdrop-filter: blur(10px);
@@ -43,119 +40,82 @@
     .birthday-image:active{ transform: scale(0.98); }
     .footer{ opacity:.8; font-size:12px; margin-top:10px }
 
-    /* Float for balloons */
     @keyframes float{ 0%{transform:translateY(0)} 100%{transform:translateY(-120vh)} }
-
-    /* Balloon wrappers (position, color) */
-    .balloon{
-      position:absolute;
-      left:var(--x);
-      bottom:-70px;
-      width:90px;              /* visual size */
-      height:112px;
-      transform-origin:center bottom;
-      animation: float var(--dur) linear var(--delay) infinite;
-      --c:#ff6ea3;             /* per-balloon color */
-      overflow:visible;
-    }
-    .balloon-svg{
-      display:block;
-      width:100%; height:100%;
-      color:var(--c);          /* drives body fill via currentColor */
-      filter: drop-shadow(0 10px 16px rgba(0,0,0,.35));
-    }
+    .balloon{ position:absolute; left:var(--x); bottom:-70px; width:90px; height:112px;
+      transform-origin:center bottom; animation: float var(--dur) linear var(--delay) infinite; --c:#ff6ea3; overflow:visible; }
+    .balloon-svg{ display:block; width:100%; height:100%; color:var(--c); filter: drop-shadow(0 10px 16px rgba(0,0,0,.35)); }
 
     canvas#confetti{ position:fixed; inset:0; pointer-events:none; z-index:3 }
 
-    /* Pop-in animation for cake */
     .pop-in{ animation: pop .45s ease-out both; }
-    @keyframes pop{
-      0%{ transform: scale(.6); opacity:0; }
-      60%{ transform: scale(1.08); opacity:1; }
-      100%{ transform: scale(1); }
+    @keyframes pop{ 0%{ transform: scale(.6); opacity:0; } 60%{ transform: scale(1.08); opacity:1; } 100%{ transform: scale(1); } }
+
+    /* SVG container keeps 1:1 like your original */
+    .cake-wrap{ position:relative; aspect-ratio:1/1; width:100%; max-width:min(400px,80vw); margin:0 auto; }
+    .cake-wrap svg{ width:100%; height:100%; display:block; }
+
+    /* Flames inside the SVG */
+    .svg-flame { transform-box: fill-box; transform-origin: 50% 100%; filter: drop-shadow(0 0 6px rgba(255,180,60,.75)); }
+    .svg-flame .core { animation: flicker .9s infinite; }
+    .svg-flame.fl2 .core { animation-duration: 1.05s; animation-delay: .12s; }
+
+    @keyframes flicker{
+      0%{ transform: rotate(-2deg) scaleY(.98); opacity:.95 }
+      25%{ transform: rotate(1deg)  scaleY(1.04); opacity:1 }
+      50%{ transform: rotate(-1deg) scaleY(1.00); opacity:.92 }
+      75%{ transform: rotate(2deg)  scaleY(1.03); opacity:1 }
+      100%{ transform: rotate(0)    scaleY(1.00); opacity:.95 }
     }
+
+    .extinguish { animation: fadeOut .25s ease-out forwards; }
+    @keyframes fadeOut { to { opacity: 0; filter: none; } }
+
+    /* Smoke puffs over the SVG using absolute %s */
+    .puff{
+      position:absolute; left:var(--x); top:var(--y);
+      transform: translate(-50%,-110%);
+      width: clamp(10px, 2vw, 18px); height: clamp(10px, 2vw, 18px);
+      border-radius:50%;
+      background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.9), rgba(200,200,200,0) 70%);
+      opacity:.9; filter: blur(0.5px); pointer-events:none; animation: puff 700ms ease-out forwards; z-index: 2;
+    }
+    @keyframes puff{ 0%{ transform:translate(-50%,-110%) scale(.8); opacity:.9; } 100%{ transform:translate(-50%,-180%) scale(1.8); opacity:0; } }
   </style>
 </head>
 <body>
   <canvas id="confetti"></canvas>
 
-  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
-    <symbol id="balloon-shape" viewBox="0 0 200 340">
-      <!-- Balloon BODY (classic round shape) -->
-      <path
-        d="M100 14
-           C146 14 180 58 180 110
-           C180 165 137 206 101 220
-           C 99 221 99 221 100 222
-           C 63 206 20 165 20 110
-           C20 58 54 14 100 14Z"
-        fill="currentColor"/>
-
-      <!-- SINGLE HIGHLIGHT -->
-      <ellipse cx="138" cy="60" rx="22" ry="14"
-               fill="white" opacity=".65" transform="rotate(16 138 60)"/>
-
-      <!-- SUBTLE INNER SHADE NEAR BOTTOM  -->
-      <radialGradient id="innerShade" cx="50%" cy="88%" r="60%">
-        <stop offset="0%"  stop-color="black" stop-opacity=".18"/>
-        <stop offset="60%" stop-color="black" stop-opacity="0"/>
-      </radialGradient>
-      <ellipse cx="100" cy="190" rx="76" ry="60" fill="url(#innerShade)"/>
-
-      <!-- STRING (1–2 long bends; stays thin when scaled) -->
-      <path
-        d="M100 222
-        C100 236,  90 248, 100 258
-        S110 280, 100 296
-        S 90 320, 100 340
-        S110 360, 100 380"
-        
-        fill="none"
-        stroke="rgba(255,255,255,0.7)"
-        stroke-width="1.2"
-        stroke-linecap="round"
-        vector-effect="non-scaling-stroke"/>
-
-
-      <!-- KNOT drawing -->
-      <ellipse cx="100" cy="225" rx="4" ry="6" 
-      fill="currentColor" 
-      opacity="0.8"/>
-
-    </symbol>
-  </svg>
-
-  <!-- Balloons palette -->
+  <!-- Balloons -->
   <div class="balloon" style="--x:8vw;  --dur:13s; --delay:-1s;  --c:#ff57b3;">
-    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true">
-      <use href="#balloon-shape"></use>
-    </svg>
+    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true"><use href="#balloon-shape"></use></svg>
   </div>
   <div class="balloon" style="--x:22vw; --dur:15s; --delay:-4s;  --c:#7afcff;">
-    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true">
-      <use href="#balloon-shape"></use>
-    </svg>
+    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true"><use href="#balloon-shape"></use></svg>
   </div>
   <div class="balloon" style="--x:36vw; --dur:12s; --delay:-2.5s;--c:#ffd166;">
-    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true">
-      <use href="#balloon-shape"></use>
-    </svg>
+    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true"><use href="#balloon-shape"></use></svg>
   </div>
   <div class="balloon" style="--x:58vw; --dur:16s; --delay:-6s;  --c:#b6ffb3;">
-    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true">
-      <use href="#balloon-shape"></use>
-    </svg>
+    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true"><use href="#balloon-shape"></use></svg>
   </div>
   <div class="balloon" style="--x:74vw; --dur:14s; --delay:-3.3s;--c:#ff9aa2;">
-    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true">
-      <use href="#balloon-shape"></use>
-    </svg>
+    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true"><use href="#balloon-shape"></use></svg>
   </div>
   <div class="balloon" style="--x:88vw; --dur:17s; --delay:-5.2s;--c:#c9b6ff;">
-    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true">
-      <use href="#balloon-shape"></use>
-    </svg>
+    <svg class="balloon-svg" viewBox="0 0 200 260" aria-hidden="true"><use href="#balloon-shape"></use></svg>
   </div>
+
+  <!-- Balloon defs (kept once) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
+    <symbol id="balloon-shape" viewBox="0 0 200 340">
+      <path d="M100 14 C146 14 180 58 180 110 C180 165 137 206 101 220 C 99 221 99 221 100 222 C 63 206 20 165 20 110 C20 58 54 14 100 14Z" fill="currentColor"/>
+      <ellipse cx="138" cy="60" rx="22" ry="14" fill="white" opacity=".65" transform="rotate(16 138 60)"/>
+      <radialGradient id="innerShade" cx="50%" cy="88%" r="60%"><stop offset="0%" stop-color="black" stop-opacity=".18"/><stop offset="60%" stop-color="black" stop-opacity="0"/></radialGradient>
+      <ellipse cx="100" cy="190" rx="76" ry="60" fill="url(#innerShade)"/>
+      <path d="M100 222 C100 236,  90 248, 100 258 S110 280, 100 296 S 90 320, 100 340 S110 360, 100 380" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <ellipse cx="100" cy="225" rx="4" ry="6" fill="currentColor" opacity="0.8"/>
+    </symbol>
+  </svg>
 
   <div class="wrap">
     <div class="card">
@@ -224,20 +184,149 @@
       const img = document.getElementById('giftImage');
       const headline = document.getElementById('headline');
       let opened = false;
+
       function openGiftOnce(){
         if(opened) return; opened = true;
         if(window.Confetti && typeof window.Confetti.burst==='function'){
           window.Confetti.burst({
             count: 220,
-            onDone: () => {
-              const cakeEmoji = document.createElement("div");
-              cakeEmoji.textContent = "🎂"; cakeEmoji.style.fontSize = "8rem";
-              cakeEmoji.classList.add("pop-in"); cakeEmoji.setAttribute("aria-label","Birthday Cake");
-              img.replaceWith(cakeEmoji); if(headline) headline.remove();
+            onDone: async () => {
+              // Create the cake container
+              const cakeContainer = document.createElement("div");
+              cakeContainer.className = "pop-in cake-wrap";
+              cakeContainer.setAttribute("aria-label","Birthday Cake");
+
+              // Load your SVG and inline it
+              const svgText = await fetch("Cake 2 Candles.svg").then(r => r.text());
+              const holder = document.createElement("div");
+              holder.innerHTML = svgText.trim();
+              const cakeSvg = holder.querySelector("svg");
+              // Ensure proper viewBox exists (your file uses 1080×1080)
+              cakeSvg.setAttribute("viewBox", "0 0 1080 1080");
+              cakeContainer.appendChild(cakeSvg);
+
+              // Flame builder (inside the SVG)
+              function makeSvgFlame(className){
+                const ns = "http://www.w3.org/2000/svg";
+                const g = document.createElementNS(ns, "g");
+                g.setAttribute("class", `svg-flame ${className||""}`);
+
+                const defs = document.createElementNS(ns,"defs");
+                const grad = document.createElementNS(ns,"radialGradient");
+                const gid = "flg"+Math.random().toString(36).slice(2);
+                grad.setAttribute("id", gid);
+                grad.setAttribute("cx","50%"); grad.setAttribute("cy","30%"); grad.setAttribute("r","65%");
+                const s1 = document.createElementNS(ns,"stop"); s1.setAttribute("offset","0%");   s1.setAttribute("stop-color","#fff8a8");
+                const s2 = document.createElementNS(ns,"stop"); s2.setAttribute("offset","55%");  s2.setAttribute("stop-color","#ffd36b");
+                const s3 = document.createElementNS(ns,"stop"); s3.setAttribute("offset","100%"); s3.setAttribute("stop-color","#ff7a2c");
+                grad.append(s1,s2,s3); defs.appendChild(grad); g.appendChild(defs);
+
+                const outer = document.createElementNS(ns,"path");
+                outer.setAttribute("d","M0,-22 C6,-11 9,-4 9,2 C9,12 4,18 0,20 C-4,18 -9,12 -9,2 C-9,-4 -6,-11 0,-22 Z");
+                outer.setAttribute("fill", `url(#${gid})`);
+                outer.setAttribute("class","core");
+
+                const inner = document.createElementNS(ns,"path");
+                inner.setAttribute("d","M0,-14 C3,-8 4.5,-4 4.5,0 C4.5,6 2,9 0,10 C-2,9 -4.5,6 -4.5,0 C-4.5,-4 -3,-8 0,-14 Z");
+                inner.setAttribute("fill","#fff4b0"); inner.setAttribute("opacity","0.9");
+
+                g.append(outer, inner);
+                return g;
+              }
+
+              // Wick coordinates from your paths (in SVG units)
+              const left = { x: 496.00,   y: 132.72 };
+              const right= { x: 554.36,   y: 132.72 };
+
+              // Slight visual lift so the base of the flame sits on the wick tip
+              const lift = -40;  // move up a few SVG units; tweak 0..-8 if needed
+              const flameScale = 1.0; // 1.0 = default size; 0.9 smaller, 1.1 bigger
+
+              const f1 = makeSvgFlame("");
+              f1.style.transform = `translate(${left.x}px, ${left.y + lift}px) scale(${flameScale})`;
+              const f2 = makeSvgFlame("fl2");
+              f2.style.transform = `translate(${right.x}px, ${right.y + lift}px) scale(${flameScale})`;
+
+              // Add flames on top of everything; if your cake has layers, append near the end
+              cakeSvg.appendChild(f1);
+              cakeSvg.appendChild(f2);
+
+              // Insert cake into the card
+              img.replaceWith(cakeContainer);
+              if (headline) headline.remove();
+
+              // === Blow-out logic ===
+              let blown = false;
+              function extinguish(){
+                if (blown) return; blown = true;
+
+                // CSS fade-out on SVG flames
+                f1.classList.add("extinguish");
+                f2.classList.add("extinguish");
+                setTimeout(()=>{ f1.remove(); f2.remove(); }, 420);
+
+                // Add two puffs over each wick (HTML overlay in %)
+                function puffAt(pt){
+                  const px = (pt.x / 1080) * 100;
+                  const py = (pt.y / 1080) * 100;
+                  for (let i=0;i<2;i++){
+                    const puff = document.createElement("div");
+                    puff.className = "puff";
+                    puff.style.setProperty("--x", px + "%");
+                    puff.style.setProperty("--y", py + "%");
+                    cakeContainer.appendChild(puff);
+                    setTimeout(()=>puff.remove(), 800);
+                  }
+                }
+                puffAt(left); puffAt(right);
+
+                stopMic();
+              }
+
+              // Click / Space / B fallback
+              cakeContainer.addEventListener("click", extinguish);
+              window.addEventListener("keydown", e => {
+                if (e.key === " " || e.key.toLowerCase() === "b") { e.preventDefault(); extinguish(); }
+              });
+
+              // Mic detection (RMS spike)
+              let audioCtx, analyser, data, micSource, rafId;
+              async function startMic(){
+                try{
+                  const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+                  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                  micSource = audioCtx.createMediaStreamSource(stream);
+                  analyser = audioCtx.createAnalyser();
+                  analyser.fftSize = 2048;
+                  data = new Uint8Array(analyser.fftSize);
+                  micSource.connect(analyser);
+
+                  let baseline = 0.02, armed = false, aboveCount = 0;
+                  function tick(){
+                    analyser.getByteTimeDomainData(data);
+                    let sum = 0; for (let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
+                    const rms = Math.sqrt(sum/data.length);
+                    if (!armed){ baseline = Math.min(0.08, Math.max(0.015, rms*1.5)); armed = true; }
+                    const threshold = Math.max(baseline + 0.04, 0.10);
+                    if (rms > threshold) aboveCount++; else aboveCount = Math.max(0, aboveCount-2);
+                    if (aboveCount > 12) { extinguish(); return; }
+                    rafId = requestAnimationFrame(tick);
+                  }
+                  tick();
+                } catch(e){ console.warn("Microphone unavailable:", e); }
+              }
+              function stopMic(){
+                if (rafId) cancelAnimationFrame(rafId);
+                try { micSource && micSource.mediaStream.getTracks().forEach(t=>t.stop()); } catch {}
+                try { audioCtx && audioCtx.close(); } catch {}
+                rafId = null; micSource = null; audioCtx = null;
+              }
+              startMic();
             }
           });
         }
       }
+
       img.addEventListener('click', openGiftOnce);
       img.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openGiftOnce(); }});
     })();
