@@ -53,6 +53,49 @@
       margin: 14px 0 0 0;
     }
 
+    .letter-emoji{
+      position: absolute;
+      left: 0;                /* full width of cake-wrap */
+      right: 0;
+      bottom: clamp(33px, 9vw, 63px);  
+      /* keep your size line as-is or adjust if you want */
+      font-size: clamp(48px, 12vw, 80px);
+      line-height: 1;
+      text-align: left;       /* we'll absolutely position children */
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      box-shadow: none;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+
+      /* tweakables */
+      --gap: 0.99em;          /* how far the hand sits from the letter (to the right) */
+      --hand-scale: 0.85;     /* size of the hand relative to the letter */
+    }
+
+    /* letter: perfectly centered under cake */
+    .emoji-letter{
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      line-height: 1;
+    }
+
+    /* hand: to the RIGHT of the letter, pointing back at it */
+    .emoji-hand{
+      position: absolute;
+      left: calc(50% + var(--gap));
+      transform: translateX(-50%) scale(var(--hand-scale));
+      line-height: 1;
+    }
+
     .wrap{ position:relative; height:100%; padding:24px; display:flex; align-items:center; justify-content:center; }
     .card{
       width:min(720px,92vw); border-radius:24px;
@@ -72,6 +115,7 @@
       display:block; margin:0 auto; width:100%; max-width:min(400px,80vw);
       height:auto; cursor:pointer; transition: transform .2s ease;
     }
+
     .birthday-image:active{ transform: scale(0.98); }
     .footer{ opacity:.8; font-size:12px; margin-top:10px }
 
@@ -162,13 +206,16 @@
       <!-- Headline -->
       <svg id="headline" class="headline-svg" viewBox="0 0 600 160" role="img" aria-label="Click to Open">
         <defs><path id="headline-arc" d="M40 120 A 300 300 0 0 1 560 120" /></defs>
-        <text font-family="Fredoka, sans-serif" font-weight="700" font-size="70px" fill="#ffffff" text-anchor="middle" transform="translate(0,40)">
+        <text font-family="Fredoka, sans-serif" font-weight="700" font-size="70px" fill="#ffffff" text-anchor="middle" transform="translate(0,10)">
           <textPath xlink:href="#headline-arc" startOffset="50%">Click to Open</textPath>
         </text>
       </svg>
 
       <!-- Gift Box -->
-      <img id="giftImage" src="box_python.png" alt="Gift Box" class="birthday-image" role="button" tabindex="0" aria-label="Open the gift" />
+      <img id="giftImage" src="4.svg"
+          class="birthday-image" role="button" tabindex="0"
+          alt="Gift Box" aria-label="Open the gift" />
+
 
       <!-- Footer -->
       <div class="footer">Made with ❤️ by <span id="from">Mahra</span></div>
@@ -292,12 +339,6 @@
               cakeSvg.setAttribute("viewBox", "0 0 1080 1080");
               cakeContainer.appendChild(cakeSvg);
 
-              // Instruction UNDER the cake
-              const instruction = document.createElement("p");
-              instruction.className = "card-instruction";
-              instruction.textContent = "Blow into the mic to blow out your candles";
-              cakeContainer.appendChild(instruction);
-
               // Flame builder (inside the SVG)
               function makeSvgFlame(className){
                 const ns = "http://www.w3.org/2000/svg";
@@ -382,80 +423,131 @@
                   const rect = cakeSvg.getBoundingClientRect();
                   const cx = rect.left + ((left.x + right.x) / 2 / 1080) * rect.width;
                   const cy = rect.top + ((left.y - 20) / 1080) * rect.height;
-
                   // Trigger the confetti burst
                   window.Confetti.burstFrom({ x: cx, y: cy, count: 280 });
-
                   // Wait just enough for the burst to finish (~1.3s) before showing the emoji
                   setTimeout(() => {
-                    const cakeRect = cakeSvg.getBoundingClientRect();
-                    const contRect = cakeContainer.getBoundingClientRect();
-                    const centerX = contRect.left + (cakeRect.left - contRect.left) + cakeRect.width / 2 - 45; 
-                    const centerY = contRect.top  + (cakeRect.top  - contRect.top)  + cakeRect.height * -0.30;
-
-                    // 📩 Envelope emoji
-                    const letterEmoji = document.createElement("div");
-                    letterEmoji.textContent = "📩";
-                    Object.assign(letterEmoji.style, {
-                      position: "absolute",
-                      left: centerX + "px",
-                      top: centerY + "px",
-                      transform: "translate(-50%, -50%)",
-                      fontSize: "clamp(72px, 14vw, 120px)",
-                      cursor: "pointer",
-                      filter: "drop-shadow(0 6px 14px rgba(0,0,0,0.35))",
-                      transition: "transform .25s ease",
-                      zIndex: 4,
-                      userSelect: "none"
-                    });
-
-                    // Update the instruction text right as the emoji appears
-                    const instructionEl = cakeContainer.querySelector(".card-instruction");
-                    if (instructionEl) {
-                      instructionEl.textContent = "Click me !";
-                      instructionEl.style.fontSize = "clamp(28px, 5vw, 42px)";
-                      instructionEl.style.fontWeight = "900";
-                      instructionEl.style.color = "#ffffff";
-                      instructionEl.style.textTransform = "uppercase";
-                      instructionEl.style.letterSpacing = "1px";
-                    }
-
-
-                    cakeContainer.appendChild(letterEmoji);
+                  const letterEmoji = document.createElement("div");
+                  letterEmoji.className = "letter-emoji";
+                  letterEmoji.setAttribute("role", "button");
+                  letterEmoji.setAttribute("tabindex", "0");
+                  letterEmoji.setAttribute("aria-label", "Open birthday message");
+                  letterEmoji.innerHTML = 
+                  `
+                    <span class="emoji-letter" aria-label="love letter" role="img">💌</span>
+                    <span class="emoji-hand" aria-hidden="true">👈🏼</span>
+                  `;
+                  cakeContainer.appendChild(letterEmoji);
 
                     // === Popup logic ===
                     function showPopup() {
-                      const wrap = document.createElement("div");
-                      wrap.innerHTML = `
-                        <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-                                    background:rgba(0,0,0,.4); backdrop-filter:blur(3px); z-index:6;">
-                          <div role="dialog" aria-modal="true" aria-label="Birthday message"
-                              style="background:#fff; color:#0f172a; border-radius:18px; padding:22px 26px;
-                                      box-shadow:0 24px 60px rgba(0,0,0,0.55); text-align:center;
-                                      max-width:min(420px,90vw);">
-                            <h3 style="font:800 20px/1.25 'Outfit',system-ui;margin:0 0 8px;">Happy Birthday!!</h3>
-                            <p style="font:500 16px/1.65 Inter,system-ui;margin:0;">
-                              Sorry I’m too broke for a real birthday present, but I love you though 💖
-                            </p>
-                            <button style="margin-top:16px; background:#0f172a; color:#fff; border:none;
-                                          border-radius:10px; padding:8px 14px; cursor:pointer;">Close</button>
-                          </div>
-                        </div>`;
-                      document.body.appendChild(wrap);
-                      const overlay = wrap.firstElementChild;
-                      const closeBtn = overlay.querySelector("button");
-                      const close = () => overlay.remove();
-                      closeBtn.addEventListener("click", close);
-                      overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
-                    }
+                        const PAGES = [
+                          { text: "I would have gotten you a real present..." },
+                          { 
+                            text: "but unfortunately, I’m broke",
+                            img: "no_money_cat.jpg"
+                          },
+                          { text: "So you’ll have to settle for this card" },
+                          { text: "Hope it made you smile (and if it didn’t… you better start smiling now)" },
+                          { text: "I love you ❤️" }
+                        ];
+
+                        let idx = 0;
+
+                        const wrap = document.createElement("div");
+                        wrap.innerHTML = `
+                          <div style="position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+                                      background:rgba(0,0,0,.4); backdrop-filter:blur(3px); z-index:6;">
+                            <div role="dialog" aria-modal="true" aria-label="Birthday message"
+                                style="background:#fff; color:#0f172a; border-radius:18px; padding:22px 26px;
+                                        box-shadow:0 24px 60px rgba(0,0,0,0.55); text-align:center;
+                                        max-width:min(420px,90vw);">
+                              <h3 id="popup-header" style="font:800 20px/1.25 'Outfit',system-ui;margin:0 0 6px;">Happy Birthday My Love !!</h3>
+                              <p id="popup-body" style="font:500 16px/1.45 Inter,system-ui;margin:0;white-space:pre-line;"></p>
+
+                              <div style="display:flex; gap:8px; justify-content:center; margin-top:14px;">
+                                <button id="btn-back"
+                                        style="background:#e5e7eb; color:#0f172a; border:none; border-radius:10px;
+                                              padding:8px 14px; cursor:pointer; min-width:84px;">Back</button>
+                                <button id="btn-next"
+                                        style="background:#0f172a; color:#fff; border:none; border-radius:10px;
+                                              padding:8px 14px; cursor:pointer; min-width:84px;">Next</button>
+                                <button id="btn-close"
+                                        style="display:none; background:#0f172a; color:#fff; border:none; border-radius:10px;
+                                              padding:8px 14px; cursor:pointer; min-width:84px;">Close</button>
+                              </div>
+                            </div>
+                          </div>`;
+                        document.body.appendChild(wrap);
+
+                        const overlay = wrap.firstElementChild;
+                        const bodyEl  = overlay.querySelector("#popup-body");
+                        const header  = overlay.querySelector("#popup-header");
+                        const backBtn = overlay.querySelector("#btn-back");
+                        const nextBtn = overlay.querySelector("#btn-next");
+                        const closeBtn= overlay.querySelector("#btn-close");
+
+                        const close = () => wrap.remove();
+                        function updateView() {
+                          const current = PAGES[idx];
+                          if (typeof current === "string") {
+                            bodyEl.innerHTML = `<p>${current}</p>`;
+                          } else {
+                            let html = `<p>${current.text}</p>`;
+                            if (current.img) {
+                              html += `<img src="${current.img}" alt="${current.alt || ''}" 
+                                        style="display:block;margin:14px auto 0 auto;
+                                                max-width:220px;width:70%;border-radius:12px;">`;
+                            }
+                            bodyEl.innerHTML = html;
+                          }
+
+                          // Header only on first panel
+                          header.style.display = idx === 0 ? "block" : "none";
+
+                          // 🔹 Hide Back on first panel; show otherwise
+                          backBtn.style.display = (idx === 0) ? "none" : "inline-block";
+
+                          const isLast = idx === PAGES.length - 1;
+                          nextBtn.style.display  = isLast ? "none" : "inline-block";
+                          closeBtn.style.display = isLast ? "inline-block" : "none";
+                          (isLast ? closeBtn : nextBtn).focus();
+                        }
+
+                        backBtn.addEventListener("click", () => { if (idx > 0) { idx--; updateView(); } });
+                        nextBtn.addEventListener("click", () => { if (idx < PAGES.length - 1) { idx++; updateView(); } });
+                        closeBtn.addEventListener("click", close);
+                        overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+
+                        function onKey(e) {
+                          if (e.key === "Escape") return close();
+                          if (e.key === "ArrowLeft" || e.key === "Backspace") {
+                            if (idx > 0) { idx--; updateView(); }
+                          } else if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") {
+                            const isLast = idx === PAGES.length - 1;
+                            if (isLast) close();
+                            else { idx++; updateView(); }
+                          }
+                        }
+                        document.addEventListener("keydown", onKey);
+
+                        const obs = new MutationObserver(() => {
+                          if (!document.body.contains(wrap)) {
+                            document.removeEventListener("keydown", onKey);
+                            obs.disconnect();
+                          }
+                        });
+                        obs.observe(document.body, { childList: true });
+
+                        updateView();
+                        (nextBtn.offsetParent ? nextBtn : closeBtn).focus();
+                      } // pop up logic end
 
                     letterEmoji.addEventListener("click", showPopup);
                     letterEmoji.addEventListener("keydown", e => {
                       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showPopup(); }
                     });
-                    letterEmoji.addEventListener("mouseenter", () => letterEmoji.style.transform = "translate(-50%,-50%) scale(1.08)");
-                    letterEmoji.addEventListener("mouseleave", () => letterEmoji.style.transform = "translate(-50%,-50%) scale(1)");
-                  }, 1300); // ⏰ delay until burst finishes
+                  }, 1300);
                 } catch(e) {
                   console.warn("Confetti burst error:", e);
                 }
