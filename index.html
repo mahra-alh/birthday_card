@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&family=Outfit:wght@800&display=swap" rel="stylesheet">
-  <title>🎉 Happy Birthday</title>
+  <title>🎉 Happy Birthday Salem</title>
   <style>
     :root{ --bg1:#111827; --bg2:#1f2937; --text:#ffffff; }
     *{box-sizing:border-box}
@@ -40,6 +40,31 @@
       text-shadow: 0 2px 8px rgba(0,0,0,.45);
     }
 
+  .mic-prompt{
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: clamp(5px, -30vw, 63px);   /* same vertical position as .letter-emoji */
+      text-align: center;
+      padding: 0;                       /* no pill, no padding */
+      background: transparent;          /* no background */
+      border: none;                     /* no border */
+      color: #fff;
+      font-family: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-weight: 600;
+      font-size: clamp(12px, 2.8vw, 16px);
+      letter-spacing: .2px;
+      text-shadow: 0 2px 8px rgba(0,0,0,.45);  /* subtle glow for readability */
+      z-index: 3;
+      pointer-events: none;             /* won’t block clicks */
+      animation: fadeIn .25s ease-out both;
+  }
+
+.mic-prompt.hide{
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .22s ease, transform .22s ease;
+}
     /* Instruction under the cake */
     .card-instruction{
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -384,7 +409,13 @@
               // Add flames on top of everything; if your cake has layers, append near the end
               cakeSvg.appendChild(f1);
               cakeSvg.appendChild(f2);
-
+              
+              const micPrompt = document.createElement("div");
+              micPrompt.className = "mic-prompt";
+              micPrompt.setAttribute("aria-live","polite");
+              micPrompt.innerHTML = 'Blow into the mic to blow out the candles';
+              cakeContainer.appendChild(micPrompt);
+              
               // Insert cake into the card
               img.replaceWith(cakeContainer);
               if (headline) headline.remove();
@@ -394,6 +425,10 @@
               function extinguish(){
                 if (blown) return; 
                 blown = true;
+                
+              // hide the prompt once the action happens
+              if (micPrompt) { micPrompt.classList.add("hide"); setTimeout(()=>micPrompt.remove(), 240); }
+                
 
                 // CSS fade-out on SVG flames
                 f1.classList.add("extinguish");
@@ -603,3 +638,4 @@
   </script>
 </body>
 </html>
+
